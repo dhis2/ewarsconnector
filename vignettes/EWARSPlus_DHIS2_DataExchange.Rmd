@@ -1,0 +1,102 @@
+---
+title: "EWARSPlus_DHIS2_DataExchange"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{EWARSPlus_DHIS2_DataExchange}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(ewarsconnector)
+```
+## Purpose of this library
+
+The `ewarsconnector` is intended to provide a console based 
+library for transferring data between a DHIS2 instance and
+an installation of the [EWARS Plus Local app](https://github.com/maquins/ewars_Plus_2023).
+
+## Create the credentials file
+
+In order for for the package to be run on a server in an automated fashion, you will need to create a plain text set of credentials. Please note, that this should only be done on 
+a server with disk encryption and never on a public machine. 
+
+The format of the credentials file should be as follows: 
+
+```{js eval = F}
+{
+  "dhis": {
+    "baseurl": "play.dhis2.org/2.36/",
+    "username": "admin",
+    "password": "district"
+  }
+}
+```
+
+The `baseurl` should be the address of the DHIS2 server. The final forward slash is important and is required. It is suggested that you create a specific user for the `ewarsconnector` with the minimum amount of permissions provided which will be required. 
+
+
+## Create the EWARS Plus Local configuration file
+
+A YAML based configuration file is used to control the interaction between 
+EWARS Plus Local and DHIS2. An example YAML file is provided below. 
+
+
+```
+baseurl: play.dhis2.org/2.36/
+previous_years: 2
+hierarchy_level: 2
+data:
+  - population:
+      frequency: yearly
+      uid: D8Q6nNeQ7i3
+  - weekly_hospitalised_cases:
+      frequency: weekly
+      uid: A0Y0q8g6DHw
+  - meantemperature:
+      frequency: weekly
+      uid: VA05qvanuVs
+  - rainsum:
+      frequency: weekly
+      uid: gsiW9SgolNd
+```
+
+The `baseurl` variable should correspond to address of the DHIS2 server, and should
+of course be the same as in the credentials file. 
+
+The `previous_years` variable should be an integer, and should correspond to the 
+number of previous years (from the current day) that data should be retreived
+from the server. 
+
+The `hiearchy_level` should correspond to the level of the organisation unit
+hierarchy at which data should be fetch. One corresponds to the root level. 
+
+The `block` should consist of a list of variables which should be fetched from 
+DHIS2. These will be obtained from the `api/analytics` end point. The variables names themselves can be anything which you like, but they should be unique. In this case, we have used `population` to represent the corresponding `Variable for annual population` required by EWARS Plus Local. Similarly, the variable `weekly_hospitalized_cases` is used to represent the required `Variable for the weekly number of outbreak` variable in the EWARS Plus Local app. Other alarm indicators such as `rainsum` and `meantemperature` can be provided as alarm indicators. 
+
+For each variable included in the `data` section, you should also provide a frequency at which the data should be obtained (either yearly or weekly). Generally, population data will be yearly, while other variables will be weekly The `uid` should correspond to the DHIS2 data element UID on the server. 
+
+## Fetching data from DHIS2 for use in EWARS Plus Local
+
+
+In order to exchange data with the DHIS2 server, the `datimutils` package is used. The first step is to login to the server with your credentials. If you have created a credentials file on your server, simply supply this as the argument to the `ewars_login_dhis2` function. If you are working locally, and want to use your keyring, it is also possible. Consult the `datimutils` documentation for specific details about the various authentication mechanisms available with the `loginToDATIM` function. 
+
+```
+library(ewarsconnector)
+#Establish a connection with the server
+ewars_login_dhis2("/home/jason/.secrets/ewars.json")
+#Parse the config
+ewars_config <- ewars_parse_config()
+#Pull the data from the server
+ewars_data <- ewars_fetch_data(ewars_config)
+writexl::write_xlsx(ewars_data, path ="ewars_data.xlsx")
+
+```
+

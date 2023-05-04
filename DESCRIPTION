@@ -1,0 +1,15 @@
+Package: ewarsconnector
+Title: Data exchange utility for EWARS Plus Local app and DHIS2
+Version: 0.0.1
+Authors@R: 
+    person("Jason", "Pickering", , "jason@dhis2.org", role = c("aut", "cre"))
+Description: A set of utility scripts primarily intended for data extraction 
+    and upload between DHIS2 and EWARS Plus Local.
+License: CC0
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.1
+Suggests: 
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
